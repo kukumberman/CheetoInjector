@@ -1,5 +1,11 @@
 # CheetoInjector
 
+## Description
+
+💉 Injects unmanaged DLL into target process.
+
+Awesome article about other injection techniques https://github.com/odzhan/injection
+
 ## How to use
 
 `[path to injector executable]` `[process name]` `[path to dll file]`
