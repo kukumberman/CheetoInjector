@@ -5,7 +5,7 @@ namespace Cucumba.Cheeto.Injection
 {
     class Injector
     {
-        public static bool InjectViaLoadLibrary(int processId, string dllPath)
+        public static void InjectViaLoadLibrary(int processId, string dllPath)
         {
             var dllPathBytes = System.Text.Encoding.ASCII.GetBytes(dllPath);
 
@@ -18,21 +18,18 @@ namespace Cucumba.Cheeto.Injection
             var processHandle = Kernel32.OpenProcess(flags, false, processId);
             if (processHandle == IntPtr.Zero)
             {
-                Console.WriteLine("[-] OpenProcess");
-                return false;
+                throw new Exception("[-] OpenProcess");
             }
 
             var allocatedAddress = Kernel32.VirtualAllocEx(processHandle, IntPtr.Zero, dllPathBytes.Length, Kernel32.MEM_COMMIT | Kernel32.MEM_RESERVE, Kernel32.PAGE_READWRITE);
             if (allocatedAddress == IntPtr.Zero)
             {
-                Console.WriteLine("[-] VirtualAllocEx");
-                return false;
+                throw new Exception("[-] VirtualAllocEx");
             }
 
             if (!Kernel32.WriteProcessMemory(processHandle, allocatedAddress, dllPathBytes, dllPathBytes.Length, out var _))
             {
-                Console.WriteLine("[-] WriteProcessMemory");
-                return false;
+                throw new Exception("[-] WriteProcessMemory");
             }
 
             var addressOfLoadLibrary = Kernel32.GetProcAddress(Kernel32.GetModuleHandle(Kernel32.DLL_NAME), "LoadLibraryA");
@@ -40,8 +37,7 @@ namespace Cucumba.Cheeto.Injection
             var threadHandle = Kernel32.CreateRemoteThread(processHandle, IntPtr.Zero, 0, addressOfLoadLibrary, allocatedAddress, 0, IntPtr.Zero);
             if (threadHandle == IntPtr.Zero)
             {
-                Console.WriteLine("[-] CreateRemoteThread");
-                return false;
+                throw new Exception("[-] CreateRemoteThread");
             }
 
             const uint INFINITE = uint.MaxValue;
@@ -51,13 +47,10 @@ namespace Cucumba.Cheeto.Injection
 
             if (!Kernel32.VirtualFreeEx(processHandle, allocatedAddress, 0, Kernel32.MEM_RELEASE))
             {
-                Console.WriteLine("[-] VirtualFreeEx");
-                return false;
+                throw new Exception("[-] VirtualFreeEx");
             }
 
             Kernel32.CloseHandle(processHandle);
-
-            return true;
         }
     }
 }

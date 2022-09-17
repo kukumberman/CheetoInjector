@@ -41,13 +41,15 @@ namespace Cucumba.Cheeto
                 return;
             }
 
-            if (Injector.InjectViaLoadLibrary(process.Id, dllPath))
+            try
             {
+                Injector.InjectViaLoadLibrary(process.Id, dllPath);
                 Console.WriteLine("[+] Successfully injected!");
             }
-            else
+            catch (Exception e)
             {
                 Console.WriteLine("Oops! Something went wrong");
+                Console.WriteLine(e.Message);
             }
 
             Console.ReadKey();
